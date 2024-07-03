@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="Main">
      <attribute name="title">
@@ -601,7 +601,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
        <rect>
         <x>1340</x>
         <y>670</y>
-        <width>111</width>
+        <width>141</width>
         <height>31</height>
        </rect>
       </property>
@@ -675,13 +675,44 @@ li.checked::marker { content: &quot;\2612&quot;; }
       <property name="geometry">
        <rect>
         <x>50</x>
-        <y>150</y>
-        <width>771</width>
-        <height>81</height>
+        <y>180</y>
+        <width>291</width>
+        <height>20</height>
        </rect>
       </property>
       <property name="text">
-       <string>20260134杨张锃制作，已开源于github</string>
+       <string>20260134杨张锃制作，已开源于github  点击跳转 -&gt;</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="urlLabel">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>180</y>
+        <width>271</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">&lt;herf=https://github.com/ChewyTube/FlowManager&gt;https://github.com/ChewyTube/FlowManager</string>
+      </property>
+      <property name="text">
+       <string>https://github.com/ChewyTube/FlowManager</string>
+      </property>
+     </widget>
+     <widget class="QPlainTextEdit" name="plainTextEdit">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>210</y>
+        <width>561</width>
+        <height>141</height>
+       </rect>
+      </property>
+      <property name="plainText">
+       <string>更新日志：
+2027/07/03 23:01 
+取消最小化功能</string>
       </property>
      </widget>
     </widget>

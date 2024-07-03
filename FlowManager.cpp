@@ -15,6 +15,10 @@ FlowManager::FlowManager(QWidget *parent)
     setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
     // ui->tabWidget->setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
 
+    auto urlLabel = ui->urlLabel;
+    urlLabel->setOpenExternalLinks(true);
+    urlLabel->setText("<a style='color: green; text-decoration: none' href = https://github.com/ChewyTube/FlowManager>https://github.com/ChewyTube/FlowManager");
+
     auto frame = ui->Destination;
     auto destination = frame->findChildren<QTextEdit *>();
 
@@ -306,15 +310,19 @@ void FlowManager::onTimeout() {
         frame->width(), frame->height(), SWP_SHOWWINDOW);
 }
 void FlowManager::allowMinClicked(bool clicked) {
-    Qt::WindowFlags m_flags = windowFlags();
     // qDebug() << m_flags;
     if (!clicked) {
-        setWindowFlags(m_flags | Qt::WindowStaysOnTopHint);
-        setWindowFlags(m_flags & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+        setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
+        setWindowFlags(windowFlags() | Qt::WindowCloseButtonHint);
+        ui->allowMin->setText("允许最小化");
     }
     else {
-        setWindowFlags(m_flags & ~Qt::WindowStaysOnTopHint);
-        setWindowFlags(m_flags | Qt::WindowMinMaxButtonsHint);
+        // setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+        setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
+        // setWindowFlags(m_flags | Qt::WindowMinMaxButtonsHint);
+        // 我就是不让你最小化
+        ui->allowMin->setText("不允许最小化");
     }
     if (!this->isVisible())
     {
