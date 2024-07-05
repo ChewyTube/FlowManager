@@ -15,7 +15,7 @@ FlowManager::FlowManager(QWidget *parent)
     ui->setupUi(this);
     setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
 #ifndef _DEBUG
-    ui->tabWidget->setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 #endif // !_DEBUG
 
     auto urlLabel = ui->urlLabel;
@@ -244,10 +244,11 @@ void FlowManager::Count(){
         auto state = StuData[index];
         stateCount[state] += 1;
     }
-    int countExpected = StuData.size() - stateCount[StuState::NotAttend];
-    int countActual = stateCount[StuState::AtClass];
+    auto classSize = loader->getClassData(classNumber).size() - 1;
+    int countExpected = classSize - stateCount[StuState::NotAttend];
+    int countAtClass = stateCount[StuState::AtClass]-(48-classSize);
     ui->EditExpected->setText(QString::number(countExpected));
-    ui->EditActual->setText(QString::number(countActual));
+    ui->EditActual->setText(QString::number(countAtClass));
 }
 void FlowManager::initDestination() {
     auto frame = ui->Destination;
