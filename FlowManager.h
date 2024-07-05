@@ -14,8 +14,10 @@
 #include <Windows.h>
 #include <WinUser.h>
 
-#include "enum.h"
+#include <stdlib.h>
 
+#include "enum.h"
+#include "NameDataLoader.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -49,6 +51,7 @@ private slots:
     void changeStateToOther();
 
     void PeriodChanged(QString text);
+    void ClassChanged(QString text);
 
     //统计应到实到
     void Count();
@@ -60,7 +63,7 @@ private:
     QMenu* initMenu(QList<QTextEdit *> textEditors);
 
     QMenu* rawMenu;
-    void putButtons(QFrame* frameStudent);
+    void putButtons(QFrame* frameStudent, int num);
 
     void refreshStuData();
     void initSoltFuncMap();
@@ -85,5 +88,8 @@ private:
     TimePeriod currtenPeriod;
 
     QTimer *timer = new QTimer(this);
+    NameDataLaoder* loader = new NameDataLaoder(".//Resources", 26);
+
+    int classNumber = 1;
 };
 #endif // FLOWMANAGER_H

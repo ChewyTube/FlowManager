@@ -3,17 +3,20 @@
 #include "./ui_time.h"
 
 #include "Constants.h"
+
 #include <QTimer>
 #include <QDebug>
 #include <QVBoxLayout>
 
 FlowManager::FlowManager(QWidget *parent)
-    : QMainWindow(parent, Qt::Widget | Qt::WindowStaysOnTopHint) // 始终置于顶层
+    : QMainWindow(parent, Qt::Widget) // 始终置于顶层
     , ui(new Ui::FlowManager)
 {
     ui->setupUi(this);
     setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
-    // ui->tabWidget->setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
+#ifndef _DEBUG
+    ui->tabWidget->setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+#endif // !_DEBUG
 
     auto urlLabel = ui->urlLabel;
     urlLabel->setOpenExternalLinks(true);
@@ -35,7 +38,7 @@ FlowManager::FlowManager(QWidget *parent)
     auto frameStudent = ui->Students;
     //frameStudent->setFrameShadow(QFrame::Raised);
 
-    putButtons(frameStudent);
+    putButtons(frameStudent, classNumber);
     initTimer();
 
     refreshAfterInit();
@@ -159,6 +162,9 @@ void FlowManager::PeriodChanged(QString text){
 void FlowManager::refreshStuData(){
     StuData.resize(48, StuState::AtClass);
     std::fill(StuData.begin(), StuData.end(), StuState::AtClass);
+    if (classNumber != 1) {
+        return;
+    }
     StuData[30] = StuState::NotAttend;
     if (currtenPeriod == TimePeriod::Evening){
         StuData[11] = StuState::NotAttend;
@@ -207,12 +213,17 @@ void FlowManager::refreshAfterInit(){
     timer->start(0);
 }
 
-void FlowManager::putButtons(QFrame* frameStudent){
+void FlowManager::putButtons(QFrame* frameStudent, int num){
     QVBoxLayout layout(frameStudent);
+    auto data = loader->data()[num];
+    auto size = data.size() - 1;
     for(int x = 0; x < 8; x++){
         for(int y = 0; y < 6; y++){
             int index = 8*y+x;
-            QString name = QString::fromStdString(nameData.at(index));
+            QString name = "";
+            if (index < size) {
+                name = QString::fromStdString(data.at(index));
+            }
             // QString name = QString::number(index);
             QPushButton* button = new QPushButton(name);
             button->move(20+btnDx*x, 20+btnDy*y);
@@ -301,6 +312,7 @@ void FlowManager::doConnect() {
     connect(timer, &QTimer::timeout, this, &FlowManager::onTimeout);
     connect(ui->allowMin, &QCheckBox::clicked, this, &FlowManager::allowMinClicked);
     connect(ui->showSysTime, &QCheckBox::clicked, this, &FlowManager::showSysTimeClicked);
+    connect(ui->classChooseBox, &QComboBox::currentTextChanged, this, &FlowManager::ClassChanged);
 }
 
 void FlowManager::onTimeout() {
@@ -311,6 +323,15 @@ void FlowManager::onTimeout() {
 }
 void FlowManager::allowMinClicked(bool clicked) {
     // qDebug() << m_flags;
+#ifdef _DEBUG
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+    setWindowFlags(windowFlags() | Qt::WindowMinMaxButtonsHint);
+    setWindowFlags(windowFlags() | Qt::WindowCloseButtonHint);
+    setVisible(true);
+    return;
+    // debug的时候最小化很正常
+#endif // _DEBUG
+
     if (!clicked) {
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
         setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
@@ -328,6 +349,7 @@ void FlowManager::allowMinClicked(bool clicked) {
     {
         setVisible(true);
     }
+
 }
 
 void FlowManager::showSysTimeClicked(bool clicked) {
@@ -337,4 +359,32 @@ void FlowManager::showSysTimeClicked(bool clicked) {
     else {
 
     }
+}
+
+void FlowManager::ClassChanged(QString text) {
+    classNumber = std::atoi(text.toStdString().c_str());
+    // qDebug() << classNumber << "\n";
+
+    // 修改button文字
+    auto StudentsFrame = ui->Students;
+    auto Students = StudentsFrame->children();
+    int x = 0;
+    int y = 0;
+    // 不知道按照横向顺序放置，遍历时却变成了竖向顺序遍历
+    for (auto s : Students) {
+        int index = 8 * y + x;
+        auto stu = static_cast<QPushButton*>(s);
+        auto nameData = loader->getClassData(classNumber);
+        QString name = "";
+        if (index <= nameData.size()-1) {
+            name = QString::fromStdString(loader->getClassData(classNumber)[index]);
+        }
+        stu->setText(name);
+        y++;
+        if (y >= 6) {
+            y = 0; x++;
+        }
+    }
+    refreshStuData();
+    refresh();
 }

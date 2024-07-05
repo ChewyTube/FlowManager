@@ -48,10 +48,33 @@
     <ClInclude Include="enum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NameDataLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="time.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitattributes" />
+    <None Include=".gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Resources\2601.txt" />
+    <Text Include="Resources\2602.txt" />
+    <Text Include="Resources\2603.txt" />
+    <Text Include="Resources\2604.txt" />
+    <Text Include="Resources\2605.txt" />
+    <Text Include="Resources\2606.txt" />
+    <Text Include="Resources\2607.txt" />
+    <Text Include="Resources\2608.txt" />
+    <Text Include="Resources\2609.txt" />
+    <Text Include="Resources\2610.txt" />
+    <Text Include="Resources\2611.txt" />
+    <Text Include="Resources\2612.txt" />
+    <Text Include="Resources\2613.txt" />
+    <Text Include="Resources\2614.txt" />
   </ItemGroup>
 </Project>
