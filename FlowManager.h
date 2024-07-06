@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QKeyEvent>
 
 #include <vector>
 #include <functional>
@@ -78,7 +79,7 @@ private:
     // void initSoltFuncMap();
     // void initStyleMap();
     void initPeriodMap();
-    void initDestinationMap();
+    // void initDestinationMap();
     void initDestination();
     void initTimer();
 
@@ -90,11 +91,14 @@ private:
 
     void allowMinMaxClose(bool allow);
 
+    void keyPressEvent(QKeyEvent* event);
+    
+
     std::vector<int> StuData{};
     // std::vector<std::function<void(int)>> soltFuncMap;
     // std::unordered_map<int, std::string> styleMap;
     std::unordered_map<QString, TimePeriod> periodMap;
-    std::unordered_map<std::string, StuState> destinationMap;
+    // std::unordered_map<std::string, StuState> destinationMap;
 
     int currentIndex = 0;
     int currentStateIndex = 0;

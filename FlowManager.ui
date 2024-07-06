@@ -435,7 +435,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
         <x>50</x>
         <y>210</y>
         <width>561</width>
-        <height>141</height>
+        <height>171</height>
        </rect>
       </property>
       <property name="plainText">
@@ -444,7 +444,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
 取消最小化功能
 2024/07/05 21:52
 支持26届所有班级，修复其他已知问题
-</string>
+2024年7月6日 23点11分
+修改代码架构
+支持状态颜色修改
+支持Alt+Ctrl+F快捷键允许最小化2min，Alt+Ctrl+K取消允许最小化</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_7">

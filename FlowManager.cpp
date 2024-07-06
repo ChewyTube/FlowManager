@@ -29,7 +29,7 @@ FlowManager::FlowManager(QWidget *parent)
     // initSoltFuncMap();
     // initStyleMap();
     initPeriodMap();
-    initDestinationMap();
+    // initDestinationMap();
 
     initDestination();
 
@@ -78,10 +78,9 @@ QMenu* FlowManager::initMenu(QList<QTextEdit *> textEditors){
 
     menu->setWindowFlags(menu->windowFlags() | Qt::FramelessWindowHint);
     menu->setObjectName("ChangeState");
-    for(int i = 0; i < StuState::StateCount; i++){
-        auto state = static_cast<StuState>(i);
+    for(int i = 0; i < stateName.size(); i++){
         std::string text;
-
+        /*
         if(state==StuState::AskQuestions){
             continue;//删去答疑
         }
@@ -100,15 +99,17 @@ QMenu* FlowManager::initMenu(QList<QTextEdit *> textEditors){
                 }
             }
         }else{
-            text = StuStateMap[state];
+            
         }
+        */
+        text = stateName[i];
 
         QAction* action = new QAction(QString::fromStdString(text), this);
         menu->addAction(action);
         // auto soltFunc = soltFuncMap[state];
 
         connect(action, &QAction::triggered, this, [=]() {
-            StuData.at(currentIndex) = state;
+            StuData.at(currentIndex) = i;
             refresh();
             });
     }
@@ -172,15 +173,15 @@ void FlowManager::refreshStuData(){
     if (classNumber != 1) {
         return;
     }
-    StuData[30] = StuState::NotAttend;
+    StuData[30] = StuState::NotAttend - 1;
     if (currtenPeriod == TimePeriod::Evening){
-        StuData[11] = StuState::NotAttend;
-        StuData[30] = StuState::NotAttend;
-        StuData[32] = StuState::NotAttend;
-        StuData[34] = StuState::NotAttend;
-        StuData[44] = StuState::NotAttend;
+        StuData[11] = StuState::NotAttend - 1;
+        StuData[30] = StuState::NotAttend - 1;
+        StuData[32] = StuState::NotAttend - 1;
+        StuData[34] = StuState::NotAttend - 1;
+        StuData[44] = StuState::NotAttend - 1;
     }else if(currtenPeriod == TimePeriod::SmallWeekend){
-        std::fill(StuData.begin(), StuData.end(), StuState::NotAttend);
+        std::fill(StuData.begin(), StuData.end(), StuState::NotAttend - 1);
         StuData[3]  = StuState::AtClass;
         StuData[14] = StuState::AtClass;
         StuData[20] = StuState::AtClass;
@@ -297,7 +298,7 @@ void FlowManager::Count(){
         stateCount[state] += 1;
     }
     auto classSize = loader->getClassData(classNumber).size() - 1;
-    int countExpected = classSize - stateCount[StuState::NotAttend];
+    int countExpected = classSize - stateCount[StuState::NotAttend - 1];
     int countAtClass = stateCount[StuState::AtClass]-(48-classSize);
     ui->EditExpected->setText(QString::number(countExpected));
     ui->EditActual->setText(QString::number(countAtClass));
@@ -308,9 +309,12 @@ void FlowManager::initDestination() {
     StuState state = StuState::Other;
     for (auto edit : destination) {
         std::string text = edit->toPlainText().toStdString();
+        /*
         if (destinationMap.find(text) != destinationMap.end()) {
             state = destinationMap[text];
         }
+        */
+        
         std::string style = destinationStyleMap[state];
         edit->setStyleSheet(QString::fromStdString(style));
     }
@@ -339,6 +343,8 @@ void FlowManager::initPeriodMap() {
 
     currtenPeriod = TimePeriod::Lunchtime;
 }
+/*
+
 void FlowManager::initDestinationMap() {
     destinationMap["在班"] = StuState::AtClass;
     destinationMap["办公室"] = StuState::AtOffice;
@@ -349,9 +355,10 @@ void FlowManager::initDestinationMap() {
     destinationMap["不参加"] = StuState::NotAttend;
     destinationMap["其他"] = StuState::Other;
 }
+*/
 void FlowManager::initTimer() {
-    timer->setInterval(1000);//10ms
-    timer->start();
+    //timer->setInterval(1000);//10ms
+    //timer->start();
 }
 
 void FlowManager::doConnect() {
@@ -363,10 +370,8 @@ void FlowManager::doConnect() {
 }
 
 void FlowManager::onTimeout() {
-    
-    auto frame = ui->centralwidget;
-    SetWindowPos((HWND)frame->winId(), HWND_TOPMOST, frame->pos().x(), frame->pos().y(),
-        frame->width(), frame->height(), SWP_SHOWWINDOW);
+    allowMinMaxClose(false);
+    qDebug() << "不允许最小化\n";
 }
 void FlowManager::allowMinClicked(bool clicked) {
     // qDebug() << m_flags;
@@ -459,16 +464,32 @@ void FlowManager::ChangeColor(int stateIndex) {
 void FlowManager::allowMinMaxClose(bool allow) {
     if (allow) {
         setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
-        setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
+        setWindowFlags(windowFlags() | Qt::WindowCloseButtonHint);
         setWindowFlags(windowFlags() | Qt::WindowMinMaxButtonsHint);
     }
     else {
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-        setWindowFlags(windowFlags() | Qt::WindowCloseButtonHint);
+        setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
         setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
     }
     if (!this->isVisible())
     {
         setVisible(true);
+    }
+}
+void FlowManager::keyPressEvent(QKeyEvent* event) {
+    // 捕捉 Ctrl + Alt + F 组合键，允许最小化;
+    if (event->key() == Qt::Key_F && event->modifiers() == (Qt::AltModifier | Qt::ControlModifier))
+    {
+        timer->start(2 * 60 * 1000);// 2min
+        allowMinMaxClose(true);
+        qDebug() << "最小化\n";
+    }
+    // 捕捉 Ctrl + Alt + N 组合键，不允许最小化;
+    if (event->key() == Qt::Key_K && event->modifiers() == (Qt::AltModifier | Qt::ControlModifier))
+    {
+        timer->stop();
+        allowMinMaxClose(false);
+        qDebug() << "不允许最小化\n";
     }
 }
