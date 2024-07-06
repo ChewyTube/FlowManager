@@ -27,7 +27,7 @@ FlowManager::FlowManager(QWidget *parent)
 
     refreshStuData();
     // initSoltFuncMap();
-    initStyleMap();
+    // initStyleMap();
     initPeriodMap();
     initDestinationMap();
 
@@ -40,6 +40,7 @@ FlowManager::FlowManager(QWidget *parent)
 
     putDestinationButtons(ui->Destination);
     putButtons(frameStudent, classNumber);
+    putChangeColorComboBox(ui->Settings);
 
     initTimer();
 
@@ -201,7 +202,7 @@ void FlowManager::refresh(){
     for(auto s:Students){
         int index = 8*y+x;
         auto stu = static_cast<QPushButton*>(s);
-        stu->setStyleSheet(QString::fromStdString(styleMap[StuData[index]]));
+        stu->setStyleSheet(QString::fromStdString(destinationStyleMap[StuData[index]]));
         y++;
         if(y>=6){
             y=0;x++;
@@ -217,6 +218,17 @@ void FlowManager::refreshAfterInit(){
     // 设置计时器超时时间（例如：0毫秒）
     timer->setSingleShot(true);
     timer->start(0);
+}
+void FlowManager::refreshDestinationColor(){
+    auto edits = ui->Destination->children();
+    int index = 0;
+    for (auto edit : edits) {
+        if (QTextEdit* textEditPtr = qobject_cast<QTextEdit*>(edit)) {
+            QTextEdit* e = static_cast<QTextEdit*>(edit);
+            e->setStyleSheet(QString::fromStdString(destinationStyleMap[index]));
+            index++;
+        }
+    }
 }
 
 void FlowManager::putButtons(QFrame* frameStudent, int num){
@@ -254,7 +266,7 @@ void FlowManager::putDestinationButtons(QFrame* frame) {
     int dy = 40;
 
     for (int i = 0; i < 8; i++) {
-        qDebug() << i << "\n";
+        // qDebug() << i << "\n";
         QTextEdit* edit = new QTextEdit();
 
         edit->setText(QString::fromStdString(stateName[i]));
@@ -264,6 +276,18 @@ void FlowManager::putDestinationButtons(QFrame* frame) {
 
         layout.addWidget(edit);
     }
+}
+void FlowManager::putChangeColorComboBox(QWidget* widget) {
+    QVBoxLayout layout(widget);
+
+    changeColorComboBox->addItem("修改状态颜色");
+    for (auto state : stateName) {
+        changeColorComboBox->addItem(QString::fromStdString(state));
+    }
+    changeColorComboBox->setCurrentIndex(0);
+    changeColorComboBox->setGeometry(60, 470, 120, 31);
+
+    layout.addWidget(changeColorComboBox);
 }
 
 void FlowManager::Count(){
@@ -287,12 +311,12 @@ void FlowManager::initDestination() {
         if (destinationMap.find(text) != destinationMap.end()) {
             state = destinationMap[text];
         }
-        std::string style = styleMap[state];
+        std::string style = destinationStyleMap[state];
         edit->setStyleSheet(QString::fromStdString(style));
     }
 }
 
-
+/*
 void FlowManager::initStyleMap() {
     styleMap[StuState::AtClass] = "background-color: rgb(170, 255, 255)";
     styleMap[StuState::AtOffice] = "background-color: rgb(170, 255, 127)";
@@ -304,6 +328,8 @@ void FlowManager::initStyleMap() {
     styleMap[StuState::NotAttend] = "background-color: rgb(200, 200, 200)";
     styleMap[StuState::Other] = "background-color: rgb(250, 250, 250)";
 }
+*/
+
 void FlowManager::initPeriodMap() {
     periodMap["早自修"] = TimePeriod::Morning;
     periodMap["午自修"] = TimePeriod::Lunchtime;
@@ -333,7 +359,7 @@ void FlowManager::doConnect() {
     connect(ui->allowMin, &QCheckBox::clicked, this, &FlowManager::allowMinClicked);
     connect(ui->showSysTime, &QCheckBox::clicked, this, &FlowManager::showSysTimeClicked);
     connect(ui->classChooseBox, &QComboBox::currentTextChanged, this, &FlowManager::ClassChanged);
-    // connect(ui->ChangeColorButton, &QPushButton::clicked, this, &FlowManager::ChangeColor);
+    connect(changeColorComboBox, &QComboBox::currentIndexChanged, this, &FlowManager::ChangeColor);
 }
 
 void FlowManager::onTimeout() {
@@ -354,9 +380,7 @@ void FlowManager::allowMinClicked(bool clicked) {
 #endif // _DEBUG
 
     if (!clicked) {
-        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-        setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
-        setWindowFlags(windowFlags() | Qt::WindowCloseButtonHint);
+        allowMinMaxClose(false);
         ui->allowMin->setText("允许最小化");
     }
     else {
@@ -409,10 +433,42 @@ void FlowManager::ClassChanged(QString text) {
     refreshStuData();
     refresh();
 }
-void FlowManager::ChangeColor(bool clicked) {
-    QColor color = QColorDialog::getColor(Qt::white, nullptr, "选择颜色");
+void FlowManager::ChangeColor(int stateIndex) {
+    auto initialState = windowFlags();
+    allowMinMaxClose(true);
+    changeColorComboBox->setCurrentIndex(0);
+    if (stateIndex == 0) {
+        return;
+    }
+    std::string title = "选择颜色:";
+    title += stateName[stateIndex - 1];
+    QColor color = QColorDialog::getColor(Qt::white, nullptr, QString::fromStdString(title));
     if (color.isValid()) {
-        // 如果用户选择了有效颜色，将其应用于按钮的背景色
-
+        // 如果用户选择了有效颜色
+        QString styleSheet = QString("background-color: %1").arg(color.name());
+        destinationStyleMap[stateIndex - 1] = styleSheet.toStdString();
+    }
+    refresh();
+    refreshDestinationColor();
+    setWindowFlags(initialState);
+    if (!this->isVisible())
+    {
+        setVisible(true);
+    }
+}
+void FlowManager::allowMinMaxClose(bool allow) {
+    if (allow) {
+        setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+        setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
+        setWindowFlags(windowFlags() | Qt::WindowMinMaxButtonsHint);
+    }
+    else {
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+        setWindowFlags(windowFlags() | Qt::WindowCloseButtonHint);
+        setWindowFlags(windowFlags() & ~Qt::WindowMinMaxButtonsHint);//禁止最大和最小化
+    }
+    if (!this->isVisible())
+    {
+        setVisible(true);
     }
 }

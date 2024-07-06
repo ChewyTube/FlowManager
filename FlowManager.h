@@ -8,6 +8,7 @@
 #include <QVBoxLayout>
 #include <QTimer>
 #include <QColorDialog>
+#include <QComboBox>
 
 #include <vector>
 #include <functional>
@@ -57,7 +58,7 @@ private slots:
     void PeriodChanged(QString text);
     void ClassChanged(QString text);
 
-    void ChangeColor(bool clicked);
+    void ChangeColor(int stateIndex);
 
     //统计应到实到
     void Count();
@@ -71,10 +72,11 @@ private:
     QMenu* rawMenu;
     void putButtons(QFrame* frameStudent, int num);
     void putDestinationButtons(QFrame* frame);
+    void putChangeColorComboBox(QWidget* widget);
 
     void refreshStuData();
     // void initSoltFuncMap();
-    void initStyleMap();
+    // void initStyleMap();
     void initPeriodMap();
     void initDestinationMap();
     void initDestination();
@@ -82,12 +84,15 @@ private:
 
     void refresh();
     void refreshAfterInit();
+    void refreshDestinationColor();
 
     void doConnect();
 
+    void allowMinMaxClose(bool allow);
+
     std::vector<int> StuData{};
     // std::vector<std::function<void(int)>> soltFuncMap;
-    std::unordered_map<int, std::string> styleMap;
+    // std::unordered_map<int, std::string> styleMap;
     std::unordered_map<QString, TimePeriod> periodMap;
     std::unordered_map<std::string, StuState> destinationMap;
 
@@ -98,6 +103,9 @@ private:
     QTimer *timer = new QTimer(this);
     NameDataLaoder* loader = new NameDataLaoder(".//Resources", 26);
 
+    QComboBox* changeColorComboBox = new QComboBox(this);
+
     int classNumber = 1;
+
 };
 #endif // FLOWMANAGER_H
