@@ -26,7 +26,7 @@ FlowManager::FlowManager(QWidget *parent)
     auto destination = frame->findChildren<QTextEdit *>();
 
     refreshStuData();
-    initSoltFuncMap();
+    // initSoltFuncMap();
     initStyleMap();
     initPeriodMap();
     initDestinationMap();
@@ -38,7 +38,9 @@ FlowManager::FlowManager(QWidget *parent)
     auto frameStudent = ui->Students;
     //frameStudent->setFrameShadow(QFrame::Raised);
 
+    putDestinationButtons(ui->Destination);
     putButtons(frameStudent, classNumber);
+
     initTimer();
 
     refreshAfterInit();
@@ -54,7 +56,7 @@ void FlowManager::StuClicked(){
 
     int ix = buttonGeometry.x() / btnDx;
     int iy = buttonGeometry.y() / btnDy;
-    currtenIndex = ix+iy*8;
+    currentIndex = ix+iy*8;
     // qDebug()<<ix<<" "<<iy<<"\n";
 
     auto frame = ui->Destination;
@@ -84,7 +86,6 @@ QMenu* FlowManager::initMenu(QList<QTextEdit *> textEditors){
         }
 
         if(state==StuState::Other){
-            //若是其他，获取字符串 这里是屎山，要改TODO
             StuState state_ = StuState::Other;
             for(auto edit : textEditors){
                 text = edit->toPlainText().toStdString();
@@ -103,9 +104,12 @@ QMenu* FlowManager::initMenu(QList<QTextEdit *> textEditors){
 
         QAction* action = new QAction(QString::fromStdString(text), this);
         menu->addAction(action);
-        auto soltFunc = soltFuncMap[state];
-        // connect(action, &QAction::triggered, this, soltFunc);
-        connect(action, &QAction::triggered, this, soltFunc);
+        // auto soltFunc = soltFuncMap[state];
+
+        connect(action, &QAction::triggered, this, [=]() {
+            StuData.at(currentIndex) = state;
+            refresh();
+            });
     }
     return menu;
 }
@@ -114,43 +118,45 @@ FlowManager::~FlowManager()
     timer->stop();
     delete ui;
 }
-
+/*
 void FlowManager::changeStateToAtClass(){
-    StuData.at(currtenIndex) = StuState::AtClass;
+    StuData.at(currentIndex) = StuState::AtClass;
     refresh();
 }
 void FlowManager::changeStateToAtOffice(){
-    StuData.at(currtenIndex) = StuState::AtOffice;
+    StuData.at(currentIndex) = StuState::AtOffice;
     refresh();
 }
 void FlowManager::changeStateToAskQuestions(){
-    StuData.at(currtenIndex) = StuState::AskQuestions;
+    StuData.at(currentIndex) = StuState::AskQuestions;
     refresh();
 }
 void FlowManager::changeStateToHaveMeeting(){
-    StuData.at(currtenIndex) = StuState::HaveMeeting;
+    StuData.at(currentIndex) = StuState::HaveMeeting;
     refresh();
 }
 void FlowManager::changeStateToAtWC(){
-    StuData.at(currtenIndex) = StuState::AtWC;
+    StuData.at(currentIndex) = StuState::AtWC;
     refresh();
 }
 void FlowManager::changeStateToWeDontKnow(){
-    StuData.at(currtenIndex) = StuState::WeDontKnow;
+    StuData.at(currentIndex) = StuState::WeDontKnow;
     refresh();
 }
 void FlowManager::changeStateToLeave(){
-    StuData.at(currtenIndex) = StuState::Leave;
+    StuData.at(currentIndex) = StuState::Leave;
     refresh();
 }
 void FlowManager::changeStateToNotAttend(){
-    StuData.at(currtenIndex) = StuState::NotAttend;
+    StuData.at(currentIndex) = StuState::NotAttend;
     refresh();
 }
 void FlowManager::changeStateToOther(){
-    StuData.at(currtenIndex) = StuState::Other;
+    StuData.at(currentIndex) = StuState::Other;
     refresh();
 }
+*/
+
 
 void FlowManager::PeriodChanged(QString text){
     currtenPeriod = periodMap[text];
@@ -220,10 +226,13 @@ void FlowManager::putButtons(QFrame* frameStudent, int num){
     for(int x = 0; x < 8; x++){
         for(int y = 0; y < 6; y++){
             int index = 8*y+x;
-            QString name = "";
-            if (index < size) {
-                name = QString::fromStdString(data.at(index));
+
+            if (index >= size) {
+                return;
             }
+
+            QString name = QString::fromStdString(data.at(index));
+            
             // QString name = QString::number(index);
             QPushButton* button = new QPushButton(name);
             button->move(20+btnDx*x, 20+btnDy*y);
@@ -237,9 +246,28 @@ void FlowManager::putButtons(QFrame* frameStudent, int num){
         }
     }
 }
+void FlowManager::putDestinationButtons(QFrame* frame) {
+    QVBoxLayout layout(frame);
+    
+    int x_ = 10;
+    int y_ = 40;
+    int dy = 40;
+
+    for (int i = 0; i < 8; i++) {
+        qDebug() << i << "\n";
+        QTextEdit* edit = new QTextEdit();
+
+        edit->setText(QString::fromStdString(stateName[i]));
+        edit->setStyleSheet(QString::fromStdString(destinationStyleMap[i]));
+        edit->setGeometry(x_, y_ + i * dy, 150, 31);
+        edit->setFont(QFont("微软雅黑", 12));
+
+        layout.addWidget(edit);
+    }
+}
 
 void FlowManager::Count(){
-    std::unordered_map<StuState, int> stateCount;
+    std::unordered_map<int, int> stateCount;
     for(int index = 0; index<StuData.size(); index++){
         auto state = StuData[index];
         stateCount[state] += 1;
@@ -263,17 +291,8 @@ void FlowManager::initDestination() {
         edit->setStyleSheet(QString::fromStdString(style));
     }
 }
-void FlowManager::initSoltFuncMap() {
-    soltFuncMap[StuState::AtClass] = std::bind(&FlowManager::changeStateToAtClass, this);
-    soltFuncMap[StuState::AtOffice] = std::bind(&FlowManager::changeStateToAtOffice, this);
-    soltFuncMap[StuState::AskQuestions] = std::bind(&FlowManager::changeStateToAskQuestions, this);
-    soltFuncMap[StuState::HaveMeeting] = std::bind(&FlowManager::changeStateToHaveMeeting, this);
-    soltFuncMap[StuState::AtWC] = std::bind(&FlowManager::changeStateToAtWC, this);
-    soltFuncMap[StuState::WeDontKnow] = std::bind(&FlowManager::changeStateToWeDontKnow, this);
-    soltFuncMap[StuState::Leave] = std::bind(&FlowManager::changeStateToLeave, this);
-    soltFuncMap[StuState::NotAttend] = std::bind(&FlowManager::changeStateToNotAttend, this);
-    soltFuncMap[StuState::Other] = std::bind(&FlowManager::changeStateToOther, this);
-}
+
+
 void FlowManager::initStyleMap() {
     styleMap[StuState::AtClass] = "background-color: rgb(170, 255, 255)";
     styleMap[StuState::AtOffice] = "background-color: rgb(170, 255, 127)";
@@ -314,6 +333,7 @@ void FlowManager::doConnect() {
     connect(ui->allowMin, &QCheckBox::clicked, this, &FlowManager::allowMinClicked);
     connect(ui->showSysTime, &QCheckBox::clicked, this, &FlowManager::showSysTimeClicked);
     connect(ui->classChooseBox, &QComboBox::currentTextChanged, this, &FlowManager::ClassChanged);
+    // connect(ui->ChangeColorButton, &QPushButton::clicked, this, &FlowManager::ChangeColor);
 }
 
 void FlowManager::onTimeout() {
@@ -388,4 +408,11 @@ void FlowManager::ClassChanged(QString text) {
     }
     refreshStuData();
     refresh();
+}
+void FlowManager::ChangeColor(bool clicked) {
+    QColor color = QColorDialog::getColor(Qt::white, nullptr, "选择颜色");
+    if (color.isValid()) {
+        // 如果用户选择了有效颜色，将其应用于按钮的背景色
+
+    }
 }

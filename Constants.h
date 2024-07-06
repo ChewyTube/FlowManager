@@ -35,4 +35,20 @@ std::unordered_map<StuState, std::string> StuStateMap{
     {NotAttend, "不参加自修"},
 };
 
+std::vector<std::string> stateName{
+    "在班" , "办公室", "开会", "厕所", "去向不明", "请假", "不参加自修", "其他",
+};
+
+std::vector<std::string> destinationStyleMap{
+    "background-color: rgb(170, 255, 255)",
+    "background-color: rgb(0  , 255, 0  )",
+    "background-color: rgb(255, 170, 255)",
+    "background-color: rgb(255, 255, 0  )",
+    "background-color: rgb(250, 100, 0  )",
+    "background-color: rgb(85 , 85 , 255)",
+    "background-color: rgb(200, 200, 200)",
+    "background-color: rgb(250, 250, 250)",
+};
+
+
 #endif // CONSTANTS_H

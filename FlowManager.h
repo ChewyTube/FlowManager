@@ -7,6 +7,7 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <QTimer>
+#include <QColorDialog>
 
 #include <vector>
 #include <functional>
@@ -40,6 +41,7 @@ private slots:
     void allowMinClicked(bool clicked);
     void showSysTimeClicked(bool clicked);
 
+    /*
     void changeStateToAtClass();
     void changeStateToAtOffice();
     void changeStateToAskQuestions();
@@ -49,9 +51,13 @@ private slots:
     void changeStateToLeave();
     void changeStateToNotAttend();
     void changeStateToOther();
+    */
+    
 
     void PeriodChanged(QString text);
     void ClassChanged(QString text);
+
+    void ChangeColor(bool clicked);
 
     //统计应到实到
     void Count();
@@ -64,9 +70,10 @@ private:
 
     QMenu* rawMenu;
     void putButtons(QFrame* frameStudent, int num);
+    void putDestinationButtons(QFrame* frame);
 
     void refreshStuData();
-    void initSoltFuncMap();
+    // void initSoltFuncMap();
     void initStyleMap();
     void initPeriodMap();
     void initDestinationMap();
@@ -78,13 +85,14 @@ private:
 
     void doConnect();
 
-    std::vector<StuState> StuData = std::vector<StuState> {};
-    std::unordered_map<StuState, std::function<void(int)>, StuStateHash, StuStateEqual> soltFuncMap;
-    std::unordered_map<StuState, std::string, StuStateHash, StuStateEqual> styleMap;
+    std::vector<int> StuData{};
+    // std::vector<std::function<void(int)>> soltFuncMap;
+    std::unordered_map<int, std::string> styleMap;
     std::unordered_map<QString, TimePeriod> periodMap;
     std::unordered_map<std::string, StuState> destinationMap;
 
-    int currtenIndex = 0;
+    int currentIndex = 0;
+    int currentStateIndex = 0;
     TimePeriod currtenPeriod;
 
     QTimer *timer = new QTimer(this);
