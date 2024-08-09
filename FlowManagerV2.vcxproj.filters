@@ -54,6 +54,9 @@
     <ClInclude Include="FlowManager\SettingsLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FlowManager\Color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Resources\2601.txt" />
@@ -72,7 +75,11 @@
     <Text Include="Resources\2614.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="config.yaml" />
     <None Include="Resources\2601.yaml" />
+    <None Include=".gitattributes" />
+    <None Include=".gitignore" />
+    <None Include="Config\DstBotton.yaml" />
+    <None Include="Config\config.yaml" />
+    <None Include="Config\stateName.yaml" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <QtWidgets/QMainWindow>
+#include <qframe.h>
 #include "ui_FlowManager.h"
 #include "FlowManager/NameDataLoader.h"
 #include "FlowManager/SettingsLoader.h"
@@ -20,11 +21,22 @@ private:
     fm2::ConfigLoader* configLoader = new fm2::ConfigLoader();
     fm2::NameDataLaoder* nameDataLoader = new fm2::NameDataLaoder(".//Resources", 26);
     
+    std::vector<std::string> dstStyleMap = {};
+    std::vector<std::string> stateName = {};
+
     template <typename T>
-    T getConfig(std::vector<std::string> path, fm2::ConfigLoader* loader);
+    T getConfig(
+        std::vector<std::string> path, 
+        fm2::ConfigLoader* loader,
+        std::string file_name
+    );
+
+    void loadDstStyMap();
+    void loadStateName();
+
+    void putDestinationButtons(QFrame* frame);
     /*
     void putButtons(QFrame* frameStudent, int num);
-    void putDestinationButtons(QFrame* frame);
     void putChangeColorComboBox(QWidget* widget);
 
     void refresh();

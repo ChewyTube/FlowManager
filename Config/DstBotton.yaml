@@ -1,0 +1,35 @@
+﻿count: 8
+hasChinese: false
+target_name: state
+
+state1_r: 170
+state1_g: 255
+state1_b: 255
+
+state2_r: 0
+state2_g: 255
+state2_b: 0
+
+state3_r: 255
+state3_g: 170
+state3_b: 255
+
+state4_r: 255
+state4_g: 255
+state4_b: 0
+
+state5_r: 250
+state5_g: 100
+state5_b: 0
+
+state6_r: 85
+state6_g: 85
+state6_b: 255
+
+state7_r: 200
+state7_g: 200
+state7_b: 200
+
+state8_r: 250
+state8_g: 250
+state8_b: 250

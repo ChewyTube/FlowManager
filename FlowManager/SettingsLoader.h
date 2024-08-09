@@ -44,8 +44,7 @@ namespace fm2 {
             }
             else {
                 father_pair = son_pair;
-            }
-            
+            }   
         }
         return true;
     }

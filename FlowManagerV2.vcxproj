@@ -113,6 +113,7 @@
   <ItemGroup>
     <ClInclude Include="FlowManager\SettingsLoader.h" />
     <ClInclude Include="FlowManager\NameDataLoader.h" />
+    <ClInclude Include="FlowManager\Color.h" />
     <ClInclude Include="ui_FlowManager.h" />
   </ItemGroup>
   <ItemGroup>
@@ -132,7 +133,11 @@
     <Text Include="Resources\2614.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="config.yaml" />
+    <None Include=".gitattributes" />
+    <None Include=".gitignore" />
+    <None Include="Config\config.yaml" />
+    <None Include="Config\DstBotton.yaml" />
+    <None Include="Config\stateName.yaml" />
     <None Include="Resources\2601.yaml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

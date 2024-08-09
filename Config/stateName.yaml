@@ -1,0 +1,11 @@
+﻿hasChinese: true
+count: 8
+target_name: state
+state1: 在班
+state2: 办公室
+state3: 开会
+state4: 厕所
+state5: 去向不明
+state6: 请假
+state7: 不参加自修
+state8: 其他

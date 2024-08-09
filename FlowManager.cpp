@@ -1,4 +1,5 @@
 ﻿#include "FlowManager.h"
+#include "FlowManager/Color.h"
 
 #include <qboxlayout.h>
 #include <qcombobox.h>
@@ -8,11 +9,22 @@
 FlowManager::FlowManager(QWidget *parent)
     : QMainWindow(parent)
 {
-    configLoader->LoadConfigFile("config.yaml", "config");
-    
-    if (!getConfig<bool>({ "nogui" }, configLoader)) {
-        ui->setupUi(this);
+    configLoader->LoadConfigFile("Config/config.yaml"   , "config"   );
+    configLoader->LoadConfigFile("Config/DstBotton.yaml", "dstBtnCfg");
+    configLoader->LoadConfigFile("Config/stateName.yaml", "stateName");
+
+    if (getConfig<bool>({ "nogui" }, configLoader, "config")) {
+        return;
     }
+
+    loadDstStyMap();
+    loadStateName();
+
+    ui->setupUi(this);
+    putDestinationButtons(ui->Destination);
+
+    
+    
     // loadDataFromConstants();
     // initStuData();
     // 
@@ -21,16 +33,69 @@ FlowManager::FlowManager(QWidget *parent)
     // putChangeColorComboBox(ui->Settings);
 }
 template <typename T>
-T FlowManager::getConfig(std::vector<std::string> path, fm2::ConfigLoader* loader) {
+T FlowManager::getConfig(
+    std::vector<std::string> path, 
+    fm2::ConfigLoader* loader, 
+    std::string file_name
+) {
     T value;
-    if (!loader->getValue("config", path, &value)) {
+    if (!loader->getValue(file_name, path, &value)) {
         std::string whole_path = "";
         for (auto s : path) {
             whole_path += s;
+            whole_path += "\\";
         }
         throw std::runtime_error(std::string("without ") + whole_path + std::string(" config"));
     }
     return value;
+}
+
+void FlowManager::putDestinationButtons(QFrame* frame) {
+    QVBoxLayout layout(frame);
+
+    int x_ = 10;
+    int y_ = 40;
+    int dy = 40;
+    
+    for (int i = 0; i < dstStyleMap.size(); i++) {
+        QTextEdit* edit = new QTextEdit();
+
+        edit->setText(QString::fromStdString(stateName[i]));
+        edit->setStyleSheet(QString::fromStdString(dstStyleMap[i]));
+        edit->setGeometry(x_, y_ + i * dy, 150, 31);
+        edit->setFont(QFont("微软雅黑", 12));
+
+        layout.addWidget(edit);
+    }
+    
+}
+void FlowManager::loadDstStyMap() {
+    std::string key = "dstBtnColor";
+    int         count       = getConfig<int>(        { "count"},        configLoader, "dstBtnCfg");
+    bool        hasChinese  = getConfig<bool>(       { "hasChinese" } , configLoader, "dstBtnCfg");
+    std::string targetName  = getConfig<std::string>({ "target_name" }, configLoader, "dstBtnCfg");
+
+    for (int i = 1; i <= count; i++) {
+        std::string target = targetName + std::to_string(i);
+        int r = getConfig<int>({ target + std::string("_r") }, configLoader, "dstBtnCfg");
+        int g = getConfig<int>({ target + std::string("_g") }, configLoader, "dstBtnCfg");
+        int b = getConfig<int>({ target + std::string("_b") }, configLoader, "dstBtnCfg");
+
+        auto color = fm2::Color(r, g, b);
+        auto styleSheet = color.ToStyleSheet();
+        dstStyleMap.push_back(styleSheet);
+    }
+}
+void FlowManager::loadStateName() {
+    std::string key = "stateName";
+    int         count       = getConfig<int>(        { "count" }      , configLoader, "stateName");
+    bool        hasChines   = getConfig<bool>(       { "hasChinese" } , configLoader, "stateName");
+    std::string targetName  = getConfig<std::string>({ "target_name" }, configLoader, "stateName");
+
+    for (int i = 1; i <= count; i++) {
+        std::string target = targetName + std::to_string(i);
+        stateName.push_back(getConfig<std::string>({ target }, configLoader, "stateName"));
+    }
 }
 
 /*
