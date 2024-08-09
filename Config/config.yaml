@@ -1,1 +1,11 @@
 ﻿nogui: false
+
+grade: 26
+total_number_of_class_grade26: 14
+default_class: 1
+
+# 名字按钮相关
+btnWidth: 130
+btnHeight: 70
+btnDx: 160
+btnDy: 90

@@ -19,7 +19,9 @@ private:
     Ui::FlowManager* ui = new Ui::FlowManager;
 
     fm2::ConfigLoader* configLoader = new fm2::ConfigLoader();
-    fm2::NameDataLaoder* nameDataLoader = new fm2::NameDataLaoder(".//Resources", 26);
+    fm2::ConfigLoader* dataLoader = new fm2::ConfigLoader();
+    
+    // fm2::NameDataLaoder* nameDataLoader = new fm2::NameDataLaoder(".//Resources", 26);
     
     std::vector<std::string> dstStyleMap = {};
     std::vector<std::string> stateName = {};
@@ -33,8 +35,12 @@ private:
 
     void loadDstStyMap();
     void loadStateName();
+    void loadNameData();
 
     void putDestinationButtons(QFrame* frame);
+    void putButtons(QFrame* frameStudent, int num);
+
+    std::vector<std::string> getClassNameData(int classIndex, int grade=26);
     /*
     void putButtons(QFrame* frameStudent, int num);
     void putChangeColorComboBox(QWidget* widget);

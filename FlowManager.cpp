@@ -5,6 +5,9 @@
 #include <qcombobox.h>
 #include <qdebug.h>
 
+#include <iostream>
+#include <iomanip>
+
 
 FlowManager::FlowManager(QWidget *parent)
     : QMainWindow(parent)
@@ -19,16 +22,15 @@ FlowManager::FlowManager(QWidget *parent)
 
     loadDstStyMap();
     loadStateName();
+    loadNameData();
 
     ui->setupUi(this);
-    putDestinationButtons(ui->Destination);
 
-    
-    
-    // loadDataFromConstants();
+    putDestinationButtons(ui->Destination);
+    putButtons(ui->Students, getConfig<int>({ "default_class" }, configLoader, "config"));
+        
     // initStuData();
-    // 
-    // putButtons(ui->Students, 1);
+
     // putDestinationButtons(ui->Destination);
     // putChangeColorComboBox(ui->Settings);
 }
@@ -69,6 +71,38 @@ void FlowManager::putDestinationButtons(QFrame* frame) {
     }
     
 }
+void FlowManager::putButtons(QFrame* frameStudent, int num) {
+    QVBoxLayout layout(frameStudent);
+    auto data = {""};
+    auto size = data.size() - 1;
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 6; y++) {
+            auto data = getClassNameData(num);
+            int btnDx     = getConfig<int>({ "btnDx" },     configLoader, "config");
+            int btnDy     = getConfig<int>({ "btnDy" },     configLoader, "config");
+            int btnWidth  = getConfig<int>({ "btnWidth" },  configLoader, "config");
+            int btnHeight = getConfig<int>({ "btnHeight" }, configLoader, "config");
+
+            int index = 8 * y + x;
+
+            if (index >= 48) {
+                return;
+            }
+
+            QString name = QString::fromStdString(data.at(index));
+            QPushButton* button = new QPushButton(name);
+            button->move(20 + btnDx * x, 20 + btnDy * y);
+            button->setFixedSize(btnWidth, btnHeight);
+            QFont font("微软雅黑", 22);
+            button->setFont(font);
+
+            // connect(button, &QPushButton::clicked, this, &FlowManager::StuClicked);
+
+            layout.addWidget(button);
+        }
+    }
+}
+
 void FlowManager::loadDstStyMap() {
     std::string key = "dstBtnColor";
     int         count       = getConfig<int>(        { "count"},        configLoader, "dstBtnCfg");
@@ -97,44 +131,43 @@ void FlowManager::loadStateName() {
         stateName.push_back(getConfig<std::string>({ target }, configLoader, "stateName"));
     }
 }
+void FlowManager::loadNameData() {
+    auto grade = getConfig<int>({ "grade" }, configLoader, "config");
+    std::string targetFile = std::string("total_number_of_class_grade") + std::to_string(grade);
+    auto num = getConfig<int>({ targetFile }, configLoader, "config");
 
-/*
-void FlowManager::loadDataFromConstants() {
-    fm2::Constants::Init();
-    auto ins = fm2::Constants::Instance();
+    for (int i = 1; i <= num; i++) {
+        std::string target    = "Resources\\" + std::to_string(grade);
+        if (i < 10) { target += std::to_string(0); }
+        target += std::to_string(i);
+        target += std::string(".yaml");
 
-    stateName_ = ins->stateName;
-    destinationStyleMap_ = ins->destinationStyleMap;
-    classNumber_ = ins->classNumber;
-    stateTag_AtClass_   = ins->stateTag_AtClass;
-    stateTag_Attend_ = ins->stateTag_Attend;
-}
+        std::string name    = std::to_string(grade);
+        if (i < 10) { name += std::to_string(0); }
+        name += std::to_string(i);
 
-void FlowManager::putButtons(QFrame* frameStudent, int num) {
-    QVBoxLayout layout(frameStudent);
-    auto data = loader->data()[num];
-    auto size = data.size() - 1;
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 6; y++) {
-            int index = 8 * y + x;
-
-            if (index >= 48) {
-                return;
-            }
-
-            QString name = QString::fromStdString(data.at(index));
-            QPushButton* button = new QPushButton(name);
-            button->move(20 + fm2::Constants::Instance()->btnDx * x, 20 + fm2::Constants::Instance()->btnDy * y);
-            button->setFixedSize(fm2::Constants::Instance()->btnWidth, fm2::Constants::Instance()->btnHeight);
-            QFont font("微软雅黑", 22);
-            button->setFont(font);
-
-            connect(button, &QPushButton::clicked, this, &FlowManager::StuClicked);
-
-            layout.addWidget(button);
-        }
+        dataLoader->LoadConfigFile(target, name);
     }
 }
+
+std::vector<std::string> FlowManager::getClassNameData(int class_index, int grade) {
+    std::vector<std::string> data = {};
+    std::stringstream filename;
+    filename << grade << std::setw(2) << std::setfill('0') << class_index;
+    auto number = getConfig<int>({ "stu_number" }, dataLoader, filename.str());
+
+    for (int i = 1; i <= number; i++) {
+        std::stringstream stu;
+        stu << "s20" << grade << std::setw(2) << std::setfill('0') << class_index
+            << std::setw(2) << std::setfill('0') << i;
+        data.push_back(getConfig<std::string>({ stu.str()}, dataLoader, filename.str()));
+    }
+    
+    return data;
+}
+
+/*
+
 void FlowManager::StuClicked() {
     /*
         refresh();
