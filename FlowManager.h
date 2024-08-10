@@ -42,42 +42,26 @@ private:
     void loadNameData();
     void loadStateTag();
     void loadStuData();
-    void buildSoltFuncMap();
     QMenu* initMenu(QList<QTextEdit*> textEditors, int StuIndex);
 
     void putDestinationButtons(QFrame* frame);
     void putButtons(QFrame* frameStudent, int num);
+    void putChangeColorComboBox(QWidget* widget);
 
     std::vector<std::string> getClassNameData(int classIndex, int grade=26);
 
-    void refresh();
+    void refreshStuFrame();
+    void refreshDstFrame();
+
     void Count();
+    void ChangeColor(int stateIndex);
 
     int currentClass = 2601;
     int currentIndex = 1;
     int currentPeriod = 0;
 
     std::vector<int> StuData;
-    /*
-    void putButtons(QFrame* frameStudent, int num);
-    void putChangeColorComboBox(QWidget* widget);
-
-    void refresh();
-    void Count();
-
-    void loadDataFromConstants();
-    void initStuData();
-
-    NameDataLaoder* loader = new NameDataLaoder(".//Resources", 26);
-    std::vector<int> StuData{};
-    std::vector<std::string> stateName_;
-    std::vector<std::string> destinationStyleMap_;
-    std::vector<bool> stateTag_AtClass_;
-    std::vector<bool> stateTag_Attend_;
-    int classNumber_ = 0;
-    int currtenPeriod_ = 0;
-
-    */
+    QComboBox* changeColorComboBox;
 };
 
     

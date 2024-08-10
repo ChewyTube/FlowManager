@@ -4,6 +4,7 @@
 #include <qboxlayout.h>
 #include <qcombobox.h>
 #include <qdebug.h>
+#include <qcolordialog.h>
 
 #include <iostream>
 #include <iomanip>
@@ -19,6 +20,13 @@ enum {
     AT_HOME,
     NOT_ATTEND,
     OTHER,
+};
+enum {
+    MORNING,
+    LUNCH_TIME,
+    EVENING,
+    OTHERS,
+    SMALL_WEEKEND,
 };
 
 FlowManager::FlowManager(QWidget *parent)
@@ -43,9 +51,12 @@ FlowManager::FlowManager(QWidget *parent)
 
     putDestinationButtons(ui->Destination);
     putButtons(ui->Students, getConfig<int>({ "default_class" }, configLoader, "config"));
-        
-    refresh();
-    // putChangeColorComboBox(ui->Settings);
+    putChangeColorComboBox(ui->Settings);
+
+    refreshStuFrame();
+    refreshDstFrame();
+
+    connect(changeColorComboBox, &QComboBox::currentIndexChanged, this, &FlowManager::ChangeColor);
 }
 template <typename T>
 T FlowManager::getConfig(
@@ -110,6 +121,21 @@ void FlowManager::putButtons(QFrame* frameStudent, int num) {
         }
     }
 }
+void FlowManager::putChangeColorComboBox(QWidget* widget) {
+    QVBoxLayout layout(widget);
+
+    changeColorComboBox = new QComboBox;
+
+    changeColorComboBox->addItem("修改状态颜色");
+    for (auto state : stateName) {
+        changeColorComboBox->addItem(QString::fromStdString(state));
+    }
+    changeColorComboBox->setCurrentIndex(0);
+    changeColorComboBox->setGeometry(60, 470, 120, 31);
+
+    layout.addWidget(changeColorComboBox);
+}
+
 
 void FlowManager::loadDstStyMap() {
     int         count       = getConfig<int>(        { "count"},        configLoader, "dstBtnCfg");
@@ -189,21 +215,22 @@ void FlowManager::loadStuData() {
     int defaultState = getConfig<int>({ "default_state" }, configLoader, "config");
     StuData.resize(count, defaultState);
 
-    if (currentClass != 1) {
+    if (currentClass != 2601) {
         return;
     }
-    StuData[30] = NOT_ATTEND - 1;
-    /*
-    if (currtenPeriod_ == fm2::TimePeriod::Evening) {
-        StuData[11] = NOT_ATTEND - 1;
-        StuData[30] = NOT_ATTEND - 1;
-        StuData[32] = NOT_ATTEND - 1;
-        StuData[34] = NOT_ATTEND - 1;
-        StuData[44] = NOT_ATTEND - 1;
+    StuData[30] = NOT_ATTEND;
+    
+    // TODO 提取至yaml
+    if (currentPeriod == EVENING) {
+        StuData[11] = NOT_ATTEND;
+        StuData[30] = NOT_ATTEND;
+        StuData[32] = NOT_ATTEND;
+        StuData[34] = NOT_ATTEND;
+        StuData[44] = NOT_ATTEND;
     }
-    else if (currtenPeriod_ == fm2::TimePeriod::SmallWeekend) {
-        std::fill(StuData.begin(), StuData.end(), NOT_ATTEND - 1);
-        StuData[3] = AT_CLASS;
+    else if (currentPeriod == SMALL_WEEKEND) {
+        std::fill(StuData.begin(), StuData.end(), NOT_ATTEND);
+        StuData[3 ] = AT_CLASS;
         StuData[14] = AT_CLASS;
         StuData[20] = AT_CLASS;
         StuData[23] = AT_CLASS;
@@ -213,12 +240,8 @@ void FlowManager::loadStuData() {
         StuData[38] = AT_CLASS;
         StuData[45] = AT_CLASS;
     }
-    */
-    
 }
-void FlowManager::buildSoltFuncMap() {
 
-}
 QMenu* FlowManager::initMenu(QList<QTextEdit*> textEditors, int StuIndex) {
     auto menu = new QMenu(this);
 
@@ -258,7 +281,7 @@ std::vector<std::string> FlowManager::getClassNameData(int class_index, int grad
 }
 
 void FlowManager::StuClicked() {
-    refresh();
+    refreshStuFrame();
     int btnDx     = getConfig<int>({ "btnDx" },     configLoader, "config");
     int btnDy     = getConfig<int>({ "btnDy" },     configLoader, "config");
     int btnWidth  = getConfig<int>({ "btnWidth" },  configLoader, "config");
@@ -287,9 +310,10 @@ void FlowManager::StuClicked() {
 }
 void FlowManager::StuChangeState(int stateIndex, int StuIndex) {
     StuData[StuIndex] = stateIndex;
-    refresh();
+    refreshStuFrame();
 }
-void FlowManager::refresh(){
+
+void FlowManager::refreshStuFrame(){
     auto StudentsFrame = ui->Students;
     auto Students = StudentsFrame->children();
     int x = 0;
@@ -306,6 +330,18 @@ void FlowManager::refresh(){
     }
     Count();
 }
+void FlowManager::refreshDstFrame() {
+    auto edits = ui->Destination->children();
+    int index = 0;
+    for (auto edit : edits) {
+        if (QTextEdit* textEditPtr = qobject_cast<QTextEdit*>(edit)) {
+            QTextEdit* e = static_cast<QTextEdit*>(edit);
+            e->setStyleSheet(QString::fromStdString(dstStyleMap[index]));
+            index++;
+        }
+    }
+}
+
 void FlowManager::Count() {
     std::vector<int> eachStatePeopleCount = {};
     auto state_count = getConfig<int>({ "state_count" }, configLoader, "config");
@@ -329,20 +365,29 @@ void FlowManager::Count() {
     ui->EditExpected->setText(QString::number(countExpected));
     ui->EditActual->setText(QString::number(countAtClass));
 }
-/*
-void FlowManager::putChangeColorComboBox(QWidget* widget) {
-    QVBoxLayout layout(widget);
-
-    QComboBox* changeColorComboBox = new QComboBox;
-
-    changeColorComboBox->addItem("修改状态颜色");
-    for (auto state : stateName_) {
-        changeColorComboBox->addItem(QString::fromStdString(state));
-    }
+void FlowManager::ChangeColor(int stateIndex) {
+    auto initialState = windowFlags();
+    // allowMinMaxClose(true);
     changeColorComboBox->setCurrentIndex(0);
-    changeColorComboBox->setGeometry(60, 470, 120, 31);
-
-    layout.addWidget(changeColorComboBox);
+    if (stateIndex == 0) {
+        return;
+    }
+    stateIndex--; // 第一格用于显示“修改状态颜色”，计算index时应减去
+    std::string title = "选择颜色:";
+    title += stateName[stateIndex];
+    QColor color = QColorDialog::getColor(Qt::white, nullptr, QString::fromStdString(title));
+    if (color.isValid()) {
+        // 如果用户选择了有效颜色
+        QString styleSheet = QString("background-color: %1").arg(color.name());
+        dstStyleMap[stateIndex] = styleSheet.toStdString();
+    }
+    refreshStuFrame();
+    refreshDstFrame();
+    setWindowFlags(initialState);
+    if (!this->isVisible())
+    {
+        setVisible(true);
+    }
 }
 
-*/
+
