@@ -26,6 +26,7 @@ private:
     
     std::vector<std::string> dstStyleMap = {};
     std::vector<std::string> stateName   = {};
+    std::vector<std::string> periodName  = {};
     std::vector<bool> stateTag_at_class  = {};
     std::vector<bool> stateTag_at_school = {};
     std::vector<bool> stateTag_attend    = {};
@@ -42,19 +43,23 @@ private:
     void loadNameData();
     void loadStateTag();
     void loadStuData();
+    void loadPeriodName();
     QMenu* initMenu(QList<QTextEdit*> textEditors, int StuIndex);
 
     void putDestinationButtons(QFrame* frame);
     void putButtons(QFrame* frameStudent, int num);
     void putChangeColorComboBox(QWidget* widget);
+    void putTimePeriodChangeComboBox(QWidget* widget);
 
     std::vector<std::string> getClassNameData(int classIndex, int grade=26);
 
     void refreshStuFrame();
     void refreshDstFrame();
+    void refreshStuData();
 
     void Count();
     void ChangeColor(int stateIndex);
+    void ChangePeriod(int periodIndex);
 
     int currentClass = 2601;
     int currentIndex = 1;
@@ -62,6 +67,7 @@ private:
 
     std::vector<int> StuData;
     QComboBox* changeColorComboBox;
+    QComboBox* changeTimePeriodComboBox;
 };
 
     

@@ -45,9 +45,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ui_FlowManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FlowManager\NameDataLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -79,5 +76,6 @@
     <None Include="Resources\2613.yaml" />
     <None Include="Resources\2614.yaml" />
     <None Include="Config\stateTag.yaml" />
+    <None Include="Config\timePeriod.yaml" />
   </ItemGroup>
 </Project>

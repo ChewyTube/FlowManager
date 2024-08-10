@@ -32,10 +32,11 @@ enum {
 FlowManager::FlowManager(QWidget *parent)
     : QMainWindow(parent)
 {
-    configLoader->LoadConfigFile("Config/config.yaml"   , "config"   );
-    configLoader->LoadConfigFile("Config/DstBotton.yaml", "dstBtnCfg");
-    configLoader->LoadConfigFile("Config/stateName.yaml", "stateName");
-    configLoader->LoadConfigFile("Config/stateTag.yaml" , "stateTag" );
+    configLoader->LoadConfigFile("Config/config.yaml"    , "config"    );
+    configLoader->LoadConfigFile("Config/DstBotton.yaml" , "dstBtnCfg" );
+    configLoader->LoadConfigFile("Config/stateName.yaml" , "stateName" );
+    configLoader->LoadConfigFile("Config/stateTag.yaml"  , "stateTag"  );
+    configLoader->LoadConfigFile("Config/timePeriod.yaml", "timePeriod");
 
     if (getConfig<bool>({ "nogui" }, configLoader, "config")) {
         return;
@@ -46,17 +47,20 @@ FlowManager::FlowManager(QWidget *parent)
     loadNameData();
     loadStateTag();
     loadStuData();
+    loadPeriodName();
 
     ui->setupUi(this);
 
     putDestinationButtons(ui->Destination);
     putButtons(ui->Students, getConfig<int>({ "default_class" }, configLoader, "config"));
     putChangeColorComboBox(ui->Settings);
+    putTimePeriodChangeComboBox(ui->Main);
 
     refreshStuFrame();
     refreshDstFrame();
 
-    connect(changeColorComboBox, &QComboBox::currentIndexChanged, this, &FlowManager::ChangeColor);
+    connect(changeColorComboBox,      &QComboBox::currentIndexChanged, this, &FlowManager::ChangeColor );
+    connect(changeTimePeriodComboBox, &QComboBox::currentIndexChanged, this, &FlowManager::ChangePeriod);
 }
 template <typename T>
 T FlowManager::getConfig(
@@ -123,7 +127,6 @@ void FlowManager::putButtons(QFrame* frameStudent, int num) {
 }
 void FlowManager::putChangeColorComboBox(QWidget* widget) {
     QVBoxLayout layout(widget);
-
     changeColorComboBox = new QComboBox;
 
     changeColorComboBox->addItem("修改状态颜色");
@@ -131,11 +134,24 @@ void FlowManager::putChangeColorComboBox(QWidget* widget) {
         changeColorComboBox->addItem(QString::fromStdString(state));
     }
     changeColorComboBox->setCurrentIndex(0);
-    changeColorComboBox->setGeometry(60, 470, 120, 31);
+    changeColorComboBox->setGeometry(60, 470, 121, 31);
 
     layout.addWidget(changeColorComboBox);
 }
+void FlowManager::putTimePeriodChangeComboBox(QWidget* widget) {
+    QVBoxLayout layout(widget);
 
+    changeTimePeriodComboBox = new QComboBox;
+    changeTimePeriodComboBox->setCurrentIndex(0);
+    changeTimePeriodComboBox->setGeometry(1340, 630, 141, 31);
+    changeTimePeriodComboBox->setFont({ "微软雅黑", 14 });
+
+    for (auto s : periodName) {
+        changeTimePeriodComboBox->addItem(QString::fromStdString(s));
+    }
+
+    layout.addWidget(changeTimePeriodComboBox);
+}
 
 void FlowManager::loadDstStyMap() {
     int         count       = getConfig<int>(        { "count"},        configLoader, "dstBtnCfg");
@@ -215,30 +231,16 @@ void FlowManager::loadStuData() {
     int defaultState = getConfig<int>({ "default_state" }, configLoader, "config");
     StuData.resize(count, defaultState);
 
-    if (currentClass != 2601) {
-        return;
-    }
-    StuData[30] = NOT_ATTEND;
-    
-    // TODO 提取至yaml
-    if (currentPeriod == EVENING) {
-        StuData[11] = NOT_ATTEND;
-        StuData[30] = NOT_ATTEND;
-        StuData[32] = NOT_ATTEND;
-        StuData[34] = NOT_ATTEND;
-        StuData[44] = NOT_ATTEND;
-    }
-    else if (currentPeriod == SMALL_WEEKEND) {
-        std::fill(StuData.begin(), StuData.end(), NOT_ATTEND);
-        StuData[3 ] = AT_CLASS;
-        StuData[14] = AT_CLASS;
-        StuData[20] = AT_CLASS;
-        StuData[23] = AT_CLASS;
-        StuData[29] = AT_CLASS;
-        StuData[37] = AT_CLASS;
-        StuData[41] = AT_CLASS;
-        StuData[38] = AT_CLASS;
-        StuData[45] = AT_CLASS;
+    refreshStuData();
+}
+void FlowManager::loadPeriodName() {
+    int count = getConfig<int>({ "count" }, configLoader, "timePeriod");
+    std::string targetName = "name";
+
+    for (int i = 1; i <= count; i++) {
+        std::string target = targetName + "_period" + std::to_string(i);
+        auto value = getConfig<std::string>({ target }, configLoader, "timePeriod");
+        periodName.push_back(value);
     }
 }
 
@@ -314,6 +316,7 @@ void FlowManager::StuChangeState(int stateIndex, int StuIndex) {
 }
 
 void FlowManager::refreshStuFrame(){
+    // qDebug() << currentPeriod;
     auto StudentsFrame = ui->Students;
     auto Students = StudentsFrame->children();
     int x = 0;
@@ -339,6 +342,34 @@ void FlowManager::refreshDstFrame() {
             e->setStyleSheet(QString::fromStdString(dstStyleMap[index]));
             index++;
         }
+    }
+}
+void FlowManager::refreshStuData() {
+    if (currentClass != 2601) {
+        qDebug() << currentClass;
+        return;
+    }
+    StuData[30] = NOT_ATTEND;
+
+    // TODO 提取至yaml
+    if (currentPeriod == EVENING) {
+        StuData[11] = NOT_ATTEND;
+        StuData[30] = NOT_ATTEND;
+        StuData[32] = NOT_ATTEND;
+        StuData[34] = NOT_ATTEND;
+        StuData[44] = NOT_ATTEND;
+    }
+    else if (currentPeriod == SMALL_WEEKEND) {
+        std::fill(StuData.begin(), StuData.end(), NOT_ATTEND);
+        StuData[3] = AT_CLASS;
+        StuData[14] = AT_CLASS;
+        StuData[20] = AT_CLASS;
+        StuData[23] = AT_CLASS;
+        StuData[29] = AT_CLASS;
+        StuData[37] = AT_CLASS;
+        StuData[41] = AT_CLASS;
+        StuData[38] = AT_CLASS;
+        StuData[45] = AT_CLASS;
     }
 }
 
@@ -388,6 +419,12 @@ void FlowManager::ChangeColor(int stateIndex) {
     {
         setVisible(true);
     }
+}
+void FlowManager::ChangePeriod(int periodIndex) {
+    currentPeriod = periodIndex;
+    refreshStuData();
+    refreshDstFrame();
+    refreshStuFrame();
 }
 
 

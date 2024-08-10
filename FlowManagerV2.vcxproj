@@ -114,7 +114,6 @@
     <ClInclude Include="FlowManager\SettingsLoader.h" />
     <ClInclude Include="FlowManager\NameDataLoader.h" />
     <ClInclude Include="FlowManager\Color.h" />
-    <ClInclude Include="ui_FlowManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes" />
@@ -123,6 +122,7 @@
     <None Include="Config\DstBotton.yaml" />
     <None Include="Config\stateName.yaml" />
     <None Include="Config\stateTag.yaml" />
+    <None Include="Config\timePeriod.yaml" />
     <None Include="Resources\2601.yaml" />
     <None Include="Resources\2602.yaml" />
     <None Include="Resources\2603.yaml" />
