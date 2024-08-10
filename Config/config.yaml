@@ -9,3 +9,7 @@ btnWidth: 130
 btnHeight: 70
 btnDx: 160
 btnDy: 90
+
+# state状态相关
+state_count: 8
+default_state: 0

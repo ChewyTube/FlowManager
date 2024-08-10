@@ -13,18 +13,22 @@ class FlowManager : public QMainWindow
 public:
     FlowManager(QWidget *parent = nullptr);
     ~FlowManager() = default;
+signals:
+    void StuChangeStateSignal(int stateIndex, int StuIndex);
 private slots:
-    // void StuClicked();
+    void StuClicked();
+    void StuChangeState(int stateIndex, int StuIndex);
 private:
     Ui::FlowManager* ui = new Ui::FlowManager;
 
     fm2::ConfigLoader* configLoader = new fm2::ConfigLoader();
     fm2::ConfigLoader* dataLoader = new fm2::ConfigLoader();
     
-    // fm2::NameDataLaoder* nameDataLoader = new fm2::NameDataLaoder(".//Resources", 26);
-    
     std::vector<std::string> dstStyleMap = {};
-    std::vector<std::string> stateName = {};
+    std::vector<std::string> stateName   = {};
+    std::vector<bool> stateTag_at_class  = {};
+    std::vector<bool> stateTag_at_school = {};
+    std::vector<bool> stateTag_attend    = {};
 
     template <typename T>
     T getConfig(
@@ -36,11 +40,24 @@ private:
     void loadDstStyMap();
     void loadStateName();
     void loadNameData();
+    void loadStateTag();
+    void loadStuData();
+    void buildSoltFuncMap();
+    QMenu* initMenu(QList<QTextEdit*> textEditors, int StuIndex);
 
     void putDestinationButtons(QFrame* frame);
     void putButtons(QFrame* frameStudent, int num);
 
     std::vector<std::string> getClassNameData(int classIndex, int grade=26);
+
+    void refresh();
+    void Count();
+
+    int currentClass = 2601;
+    int currentIndex = 1;
+    int currentPeriod = 0;
+
+    std::vector<int> StuData;
     /*
     void putButtons(QFrame* frameStudent, int num);
     void putChangeColorComboBox(QWidget* widget);

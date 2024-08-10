@@ -1,0 +1,26 @@
+﻿state1_at_class: true
+state2_at_class: false
+state3_at_class: false
+state4_at_class: false
+state5_at_class: false
+state6_at_class: false
+state7_at_class: false
+state8_at_class: false
+
+state1_at_school: true
+state2_at_school: true
+state3_at_school: true
+state4_at_school: true
+state5_at_school: false
+state6_at_school: false
+state7_at_school: false
+state8_at_school: true  # 这个不好说啊
+
+state1_attend: true
+state2_attend: true
+state3_attend: true
+state4_attend: true
+state5_attend: true
+state6_attend: true
+state7_attend: false
+state8_attend: true     # 这个不好说啊

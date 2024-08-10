@@ -8,6 +8,18 @@
 #include <iostream>
 #include <iomanip>
 
+// TODO 每次点击的时候都会创建一个menu对象，但是要到程序关闭的时候才销毁，会导致内存占用极其缓慢地上升
+// 为了使代码更易读而定义，请以Config/stateName.yaml为准
+enum {
+    AT_CLASS,
+    AT_OFFICE,
+    MEETING,
+    AT_WC,
+    WE_DONT_KNOW,
+    AT_HOME,
+    NOT_ATTEND,
+    OTHER,
+};
 
 FlowManager::FlowManager(QWidget *parent)
     : QMainWindow(parent)
@@ -15,6 +27,7 @@ FlowManager::FlowManager(QWidget *parent)
     configLoader->LoadConfigFile("Config/config.yaml"   , "config"   );
     configLoader->LoadConfigFile("Config/DstBotton.yaml", "dstBtnCfg");
     configLoader->LoadConfigFile("Config/stateName.yaml", "stateName");
+    configLoader->LoadConfigFile("Config/stateTag.yaml" , "stateTag" );
 
     if (getConfig<bool>({ "nogui" }, configLoader, "config")) {
         return;
@@ -23,15 +36,15 @@ FlowManager::FlowManager(QWidget *parent)
     loadDstStyMap();
     loadStateName();
     loadNameData();
+    loadStateTag();
+    loadStuData();
 
     ui->setupUi(this);
 
     putDestinationButtons(ui->Destination);
     putButtons(ui->Students, getConfig<int>({ "default_class" }, configLoader, "config"));
         
-    // initStuData();
-
-    // putDestinationButtons(ui->Destination);
+    refresh();
     // putChangeColorComboBox(ui->Settings);
 }
 template <typename T>
@@ -73,11 +86,10 @@ void FlowManager::putDestinationButtons(QFrame* frame) {
 }
 void FlowManager::putButtons(QFrame* frameStudent, int num) {
     QVBoxLayout layout(frameStudent);
-    auto data = {""};
+    auto data = getClassNameData(num);
     auto size = data.size() - 1;
     for (int x = 0; x < 8; x++) {
         for (int y = 0; y < 6; y++) {
-            auto data = getClassNameData(num);
             int btnDx     = getConfig<int>({ "btnDx" },     configLoader, "config");
             int btnDy     = getConfig<int>({ "btnDy" },     configLoader, "config");
             int btnWidth  = getConfig<int>({ "btnWidth" },  configLoader, "config");
@@ -85,18 +97,14 @@ void FlowManager::putButtons(QFrame* frameStudent, int num) {
 
             int index = 8 * y + x;
 
-            if (index >= 48) {
-                return;
-            }
-
             QString name = QString::fromStdString(data.at(index));
+            QFont font("微软雅黑", 22);
             QPushButton* button = new QPushButton(name);
             button->move(20 + btnDx * x, 20 + btnDy * y);
             button->setFixedSize(btnWidth, btnHeight);
-            QFont font("微软雅黑", 22);
             button->setFont(font);
 
-            // connect(button, &QPushButton::clicked, this, &FlowManager::StuClicked);
+            connect(button, &QPushButton::clicked, this, &FlowManager::StuClicked);
 
             layout.addWidget(button);
         }
@@ -104,7 +112,6 @@ void FlowManager::putButtons(QFrame* frameStudent, int num) {
 }
 
 void FlowManager::loadDstStyMap() {
-    std::string key = "dstBtnColor";
     int         count       = getConfig<int>(        { "count"},        configLoader, "dstBtnCfg");
     bool        hasChinese  = getConfig<bool>(       { "hasChinese" } , configLoader, "dstBtnCfg");
     std::string targetName  = getConfig<std::string>({ "target_name" }, configLoader, "dstBtnCfg");
@@ -121,7 +128,6 @@ void FlowManager::loadDstStyMap() {
     }
 }
 void FlowManager::loadStateName() {
-    std::string key = "stateName";
     int         count       = getConfig<int>(        { "count" }      , configLoader, "stateName");
     bool        hasChines   = getConfig<bool>(       { "hasChinese" } , configLoader, "stateName");
     std::string targetName  = getConfig<std::string>({ "target_name" }, configLoader, "stateName");
@@ -149,12 +155,97 @@ void FlowManager::loadNameData() {
         dataLoader->LoadConfigFile(target, name);
     }
 }
+void FlowManager::loadStateTag() {
+    int count = getConfig<int>({ "state_count" }, configLoader, "config");
+    std::vector<std::string> tag_name = { "at_class", "at_school", "attend" };
+
+    stateTag_attend.resize(count, 0);
+    stateTag_at_class.resize(count, 0);
+    stateTag_at_school.resize(count, 0);
+
+    for (auto tag : tag_name) {
+        for (int i = 1; i <= count; i++) {
+            std::string target = "state" + std::to_string(i) + "_" + tag;
+            auto value = getConfig<bool>({ target }, configLoader, "stateTag");
+            if (tag == "at_class") {
+                stateTag_at_class[i - 1]  = value;
+            }
+            else if(tag == "at_school")
+            {
+                stateTag_at_school[i - 1] = value;
+            }
+            else if (tag == "attend")
+            {
+                stateTag_attend[i - 1]    = value;
+            }
+            else {
+                throw std::runtime_error("unknown tag");
+            }
+        }
+    }
+}
+void FlowManager::loadStuData() {
+    int count        = getConfig<int>({ "count" },         dataLoader,   std::to_string(currentClass));
+    int defaultState = getConfig<int>({ "default_state" }, configLoader, "config");
+    StuData.resize(count, defaultState);
+
+    if (currentClass != 1) {
+        return;
+    }
+    StuData[30] = NOT_ATTEND - 1;
+    /*
+    if (currtenPeriod_ == fm2::TimePeriod::Evening) {
+        StuData[11] = NOT_ATTEND - 1;
+        StuData[30] = NOT_ATTEND - 1;
+        StuData[32] = NOT_ATTEND - 1;
+        StuData[34] = NOT_ATTEND - 1;
+        StuData[44] = NOT_ATTEND - 1;
+    }
+    else if (currtenPeriod_ == fm2::TimePeriod::SmallWeekend) {
+        std::fill(StuData.begin(), StuData.end(), NOT_ATTEND - 1);
+        StuData[3] = AT_CLASS;
+        StuData[14] = AT_CLASS;
+        StuData[20] = AT_CLASS;
+        StuData[23] = AT_CLASS;
+        StuData[29] = AT_CLASS;
+        StuData[37] = AT_CLASS;
+        StuData[41] = AT_CLASS;
+        StuData[38] = AT_CLASS;
+        StuData[45] = AT_CLASS;
+    }
+    */
+    
+}
+void FlowManager::buildSoltFuncMap() {
+
+}
+QMenu* FlowManager::initMenu(QList<QTextEdit*> textEditors, int StuIndex) {
+    auto menu = new QMenu(this);
+
+    menu->setWindowFlags(menu->windowFlags() | Qt::FramelessWindowHint);
+    menu->setObjectName("ChangeState");
+
+    auto state_count = getConfig<int>({ "state_count" }, configLoader, "config");
+
+    for (int i = 0; i < state_count; i++) {
+        std::string text;
+
+        text = stateName[i];
+        
+        QAction* action = new QAction(QString::fromStdString(text), this);
+        menu->addAction(action);
+        connect(action, &QAction::triggered, this, 
+            [=](){ StuChangeState(i, StuIndex); }
+        , Qt::QueuedConnection);
+    }
+    return menu;
+}
 
 std::vector<std::string> FlowManager::getClassNameData(int class_index, int grade) {
     std::vector<std::string> data = {};
     std::stringstream filename;
     filename << grade << std::setw(2) << std::setfill('0') << class_index;
-    auto number = getConfig<int>({ "stu_number" }, dataLoader, filename.str());
+    auto number = getConfig<int>({ "count" }, dataLoader, filename.str());
 
     for (int i = 1; i <= number; i++) {
         std::stringstream stu;
@@ -166,23 +257,24 @@ std::vector<std::string> FlowManager::getClassNameData(int class_index, int grad
     return data;
 }
 
-/*
-
 void FlowManager::StuClicked() {
-    /*
-        refresh();
+    refresh();
+    int btnDx     = getConfig<int>({ "btnDx" },     configLoader, "config");
+    int btnDy     = getConfig<int>({ "btnDy" },     configLoader, "config");
+    int btnWidth  = getConfig<int>({ "btnWidth" },  configLoader, "config");
+    int btnHeight = getConfig<int>({ "btnHeight" }, configLoader, "config");
 
     auto Stu = static_cast<QPushButton*>(sender());
     QRect buttonGeometry = Stu->geometry();
 
     int ix = buttonGeometry.x() / btnDx;
     int iy = buttonGeometry.y() / btnDy;
-    currentIndex = ix + iy * 8;
+    int index = ix + iy * 8;
     // qDebug()<<ix<<" "<<iy<<"\n";
 
     auto frame = ui->Destination;
     auto destination = frame->findChildren<QTextEdit*>();
-    auto menu = initMenu(destination);
+    auto menu = initMenu(destination, index);
 
     int x = buttonGeometry.x() + btnWidth + 30;
     int y = buttonGeometry.y() + btnHeight + 210;
@@ -192,18 +284,21 @@ void FlowManager::StuClicked() {
     }
 
     menu->exec(mapToGlobal(QPoint(x, y))); // 使用 exec 方法弹出菜单
-    
+}
+void FlowManager::StuChangeState(int stateIndex, int StuIndex) {
+    StuData[StuIndex] = stateIndex;
+    refresh();
 }
 void FlowManager::refresh(){
     auto StudentsFrame = ui->Students;
     auto Students = StudentsFrame->children();
     int x = 0;
     int y = 0;
-    // 不知道按照横向顺序放置，遍历时却变成了竖向顺序遍历
+    // 不知道为什么按照横向顺序放置，遍历时却变成了竖向顺序遍历
     for (auto s : Students) {
         int index = 8 * y + x;
         auto stu = static_cast<QPushButton*>(s);
-        stu->setStyleSheet(QString::fromStdString(destinationStyleMap_[StuData[index]]));
+        stu->setStyleSheet(QString::fromStdString(dstStyleMap[StuData[index]]));
         y++;
         if (y >= 6) {
             y = 0; x++;
@@ -211,25 +306,30 @@ void FlowManager::refresh(){
     }
     Count();
 }
-
-void FlowManager::putDestinationButtons(QFrame* frame) {
-    QVBoxLayout layout(frame);
-
-    int x_ = 10;
-    int y_ = 40;
-    int dy = 40;
-
-    for (int i = 0; i < destinationStyleMap_.size(); i++) {
-        QTextEdit* edit = new QTextEdit();
-
-        edit->setText(QString::fromStdString(stateName_[i]));
-        edit->setStyleSheet(QString::fromStdString(destinationStyleMap_[i]));
-        edit->setGeometry(x_, y_ + i * dy, 150, 31);
-        edit->setFont(QFont("微软雅黑", 12));
-
-        layout.addWidget(edit);
+void FlowManager::Count() {
+    std::vector<int> eachStatePeopleCount = {};
+    auto state_count = getConfig<int>({ "state_count" }, configLoader, "config");
+    eachStatePeopleCount.resize(state_count, 0);
+    auto classSize = getConfig<int>({ "count" }, dataLoader, std::to_string(currentClass));
+    for (int index = 0; index < classSize; index++) {
+        auto state = StuData[index];
+        eachStatePeopleCount[state] += 1;
     }
+
+    int countExpected = 0;
+    int countAtClass = 0;
+    for (int i = 0; i < state_count; i++) {
+        if (stateTag_at_class[i]) {
+            countAtClass += eachStatePeopleCount[i];
+        }
+        if (stateTag_attend[i]) {
+            countExpected += eachStatePeopleCount[i];
+        }
+    }
+    ui->EditExpected->setText(QString::number(countExpected));
+    ui->EditActual->setText(QString::number(countAtClass));
 }
+/*
 void FlowManager::putChangeColorComboBox(QWidget* widget) {
     QVBoxLayout layout(widget);
 
@@ -243,55 +343,6 @@ void FlowManager::putChangeColorComboBox(QWidget* widget) {
     changeColorComboBox->setGeometry(60, 470, 120, 31);
 
     layout.addWidget(changeColorComboBox);
-}
-
-void FlowManager::Count() {
-    std::unordered_map<int, int> stateCount;
-    auto classSize = loader->getClassData(classNumber_).size() - 1;
-    for (int index = 0; index < StuData.size(); index++) {
-        auto state = StuData[index];
-        stateCount[state] += 1;
-    }
-    
-    int countExpected = 0;
-    int countAtClass = 0;
-    for (int i = 0; i < stateName_.size(); i++) {
-        if (stateTag_AtClass_[i]) {
-            countAtClass += stateCount[i];
-        }
-        if (stateTag_Attend_[i]) {
-            countExpected += stateCount[i];
-        }
-    }
-    ui->EditExpected->setText(QString::number(countExpected));
-    ui->EditActual->setText(QString::number(countAtClass));
-}
-void FlowManager::initStuData() {
-    StuData.resize(48, fm2::StuState::AtClass);
-    std::fill(StuData.begin(), StuData.end(), fm2::StuState::AtClass);
-    if (classNumber_ != 1) {
-        return;
-    }
-    StuData[30] = fm2::StuState::NotAttend - 1;
-    if (currtenPeriod_ == fm2::TimePeriod::Evening) {
-        StuData[11] = fm2::StuState::NotAttend - 1;
-        StuData[30] = fm2::StuState::NotAttend - 1;
-        StuData[32] = fm2::StuState::NotAttend - 1;
-        StuData[34] = fm2::StuState::NotAttend - 1;
-        StuData[44] = fm2::StuState::NotAttend - 1;
-    }
-    else if (currtenPeriod_ == fm2::TimePeriod::SmallWeekend) {
-        std::fill(StuData.begin(), StuData.end(), fm2::StuState::NotAttend - 1);
-        StuData[3] = fm2::StuState::AtClass;
-        StuData[14] = fm2::StuState::AtClass;
-        StuData[20] = fm2::StuState::AtClass;
-        StuData[23] = fm2::StuState::AtClass;
-        StuData[29] = fm2::StuState::AtClass;
-        StuData[37] = fm2::StuState::AtClass;
-        StuData[41] = fm2::StuState::AtClass;
-        StuData[38] = fm2::StuState::AtClass;
-        StuData[45] = fm2::StuState::AtClass;
-    }
 }
 
 */

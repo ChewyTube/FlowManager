@@ -122,6 +122,7 @@
     <None Include="Config\config.yaml" />
     <None Include="Config\DstBotton.yaml" />
     <None Include="Config\stateName.yaml" />
+    <None Include="Config\stateTag.yaml" />
     <None Include="Resources\2601.yaml" />
     <None Include="Resources\2602.yaml" />
     <None Include="Resources\2603.yaml" />

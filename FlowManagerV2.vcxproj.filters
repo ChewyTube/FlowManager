@@ -78,5 +78,6 @@
     <None Include="Resources\2612.yaml" />
     <None Include="Resources\2613.yaml" />
     <None Include="Resources\2614.yaml" />
+    <None Include="Config\stateTag.yaml" />
   </ItemGroup>
 </Project>
